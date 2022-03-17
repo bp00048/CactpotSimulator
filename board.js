@@ -121,12 +121,43 @@ class GameState {
   }
 }
 
+function permutations(arr) {
+  if (arr.length === 1) return [arr];
+  
+  const collect = [];
+  arr.forEach((e, index) => {
+    const without = arr.slice(0,index).concat(arr.slice(index+1));
+    const subPermutations = permutations(without);
+          subPermutations.map(sub => [e].concat(sub)).forEach(e => collect.push(e));
+  });
+
+  return collect;
+}
+
 function allPossibleStates(state) {
   const board = state.board;
   const blankSpots = board.reduce(
-    (sofar, e, index) => e === 0 ? sofar.push(index) : sofar, []);
-  const valuesLeft = Array(9).keys().map(n => n + 1)
-    .filter(v => !state.values.includes(n));
+    (sofar, e, index) => e === 0 ? sofar.concat([index]) : sofar, new Array());
+  const valuesLeft = [...Array(9).keys()].map(n => n + 1)
+    .filter(v => !state.values.includes(v));
 
-  return {board, blankSpots, valuesLeft};
+  return permutations(valuesLeft)
+    .map(p => state.whereThese(blankSpots).are(p));
+}
+
+function highestExpectedPayout(state){
+  const allStates = allPossibleStates(state);
+  const allPayouts = allStates.map(state1 => state1.payouts); 
+  
+  const expectedPayouts = {};
+
+  Object.values(GameState.LineNames).forEach(line => {
+    expectedPayouts[line] = allPayouts.reduce((sum, payout) => sum + payout[line], 0);
+    expectedPayouts[line] /= allPayouts.length;
+  });
+
+
+  return Object.values(GameState.LineNames).reduce(
+    (max, line) => max.payout < expectedPayouts[line] ? {line, payout: expectedPayouts[line]} : max, 
+    {line: GameState.LineNames.V1, payout: expectedPayouts[GameState.LineNames.V1]});
 }
