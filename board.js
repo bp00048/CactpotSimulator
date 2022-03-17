@@ -37,12 +37,17 @@ class GameState {
                           || state.filter(e => e === n).length === 1));
   }
 
+  /* Construct a valid game state, where valid means exactly 9 elements,
+   * where zero represents a blank spot and all other numbers are unique.
+   */
   constructor(initialState) {
     this.#board = initialState && GameState.validateState(initialState)
       ? [...initialState]
       : Array(9).fill(0);
   }
 
+  /* Sugar to create a new state with one space changed.
+   */
   where (position) {
     return {
       is: (val) => {
@@ -52,8 +57,12 @@ class GameState {
       }};
   }
 
+  /* Synonym for where */
   and (position) { return this.where(position); }
 
+  /* Given an array of positions and values, sugar to create a new state
+   * with those positions and values replaced
+   */
   whereThese(positions) {
     return {
       are: (vals) => {
@@ -64,11 +73,13 @@ class GameState {
     };
   }
  
+  /* Enum-like for all the rows, columns and diagonals for a board */
   static LineNames = Object.freeze({
      V1: 1, V2: 2, V3: 3,
      H1: 4, H2: 5, H3: 6, 
      D1: 7, D2: 8});
 
+  /* Get a map from each line to its constituent spaces */
   get lines() {
     this.#lines = this.#lines || {
      [GameState.LineNames.H1]: [this.#board[0], this.#board[1], this.#board[2]],
@@ -83,6 +94,9 @@ class GameState {
    return this.#lines;
   }
 
+  /* Get a map frome each line to its payout
+   * If there are any 0s, return undefined
+   */
   get payouts() {
     if(!this.#board.every(n => n !== 0)) {
       return undefined;
@@ -101,6 +115,7 @@ class GameState {
     return this.#payouts;
   }
 
+  /* Get the line and value of the line with the max payout */
   get maxPayout() {
     if (!this.#maxPayout) {
       const payouts = this.payouts;
@@ -112,32 +127,38 @@ class GameState {
     return this.#maxPayout;
   }
 
+  /* Get a copy of the board state as an array */
   get board() {
     return [...this.#board];
   }
 
+  /* Get a list of all non-zero spaces on the board */
   get values() {
     return this.#board.filter(n => n !== 0);
   }
 }
 
+/* Util, get all permutations of an array.
+ * A non-empty array is assumed to be the input.
+ */
 function permutations(arr) {
   if (arr.length === 1) return [arr];
   
-  const collect = [];
-  arr.forEach((e, index) => {
-    const without = arr.slice(0,index).concat(arr.slice(index+1));
-    const subPermutations = permutations(without);
-          subPermutations.map(sub => [e].concat(sub)).forEach(e => collect.push(e));
-  });
-
-  return collect;
+  return arr.reduce((perms, e, index) => {
+      const without = arr.slice(0,index).concat(arr.slice(index+1));
+      const subPermutations = permutations(without);
+      return perms.concat(subPermutations.map(sub => [e].concat(sub)));
+    }, 
+    []);
 }
 
+/* Given a state, return all possible states, if the zeros are filled with
+ * the remaining numbers.
+ */
 function allPossibleStates(state) {
   const board = state.board;
   const blankSpots = board.reduce(
-    (sofar, e, index) => e === 0 ? sofar.concat([index]) : sofar, new Array());
+    (found, e, index) => e === 0 ? found.concat([index]) : found, []);
   const valuesLeft = [...Array(9).keys()].map(n => n + 1)
     .filter(v => !state.values.includes(v));
 
@@ -145,19 +166,27 @@ function allPossibleStates(state) {
     .map(p => state.whereThese(blankSpots).are(p));
 }
 
+/* Given a state, over all possible states, return which line
+ * has the highest expected value (along with that value).
+ */
 function highestExpectedPayout(state){
   const allStates = allPossibleStates(state);
   const allPayouts = allStates.map(state1 => state1.payouts); 
   
-  const expectedPayouts = {};
+  const expectedPayouts = Object.values(GameState.LineNames).reduce(
+  (payouts, line) => {
+      payouts[line] = allPayouts
+        .reduce((sum, payout) => sum + payout[line], 0) / allPayouts.length;
+      return payouts;
+    }
+  , {});
 
-  Object.values(GameState.LineNames).forEach(line => {
-    expectedPayouts[line] = allPayouts.reduce((sum, payout) => sum + payout[line], 0);
-    expectedPayouts[line] /= allPayouts.length;
-  });
-
-
+  // this is just a wrapped Max
+  const first = {line: GameState.LineNames.V1, 
+                 payout: expectedPayouts[GameState.LineNames.V1]};
   return Object.values(GameState.LineNames).reduce(
-    (max, line) => max.payout < expectedPayouts[line] ? {line, payout: expectedPayouts[line]} : max, 
-    {line: GameState.LineNames.V1, payout: expectedPayouts[GameState.LineNames.V1]});
+    (max, line) => max.payout < expectedPayouts[line] 
+                    ? {line, payout: expectedPayouts[line]}
+                    : max, 
+    first);
 }
