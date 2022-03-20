@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src='board.js'></script>
+<style>
+select { margin-right:15px; margin-bottom:15px; }
+</style>
+</head>
+<body>
+<form id='doform'>
+<select id="x0y0" class='x0 y0' name="00">
+  <option value="0"></option>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+  <option value="4">4</option>
+  <option value="5">5</option>
+  <option value="6">6</option>
+  <option value="7">7</option>
+  <option value="8">8</option>
+  <option value="9">9</option>
+</select>
+<select id="x1y0" class='x1 y0' name="10">
+  <option value="0"></option>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+  <option value="4">4</option>
+  <option value="5">5</option>
+  <option value="6">6</option>
+  <option value="7">7</option>
+  <option value="8">8</option>
+  <option value="9">9</option>
+</select>
+<select id="x2y0"class='x2 y0' name="20">
+  <option value="0"></option>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+  <option value="4">4</option>
+  <option value="5">5</option>
+  <option value="6">6</option>
+  <option value="7">7</option>
+  <option value="8">8</option>
+  <option value="9">9</option>
+</select>
+<br />
+<select id="x0y1" class='x0 y1' name="01">
+  <option value="0"></option>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+  <option value="4">4</option>
+  <option value="5">5</option>
+  <option value="6">6</option>
+  <option value="7">7</option>
+  <option value="8">8</option>
+  <option value="9">9</option>
+</select>
+<select id="x1y1" class='x1 y1' name="11">
+  <option value="0"></option>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+  <option value="4">4</option>
+  <option value="5">5</option>
+  <option value="6">6</option>
+  <option value="7">7</option>
+  <option value="8">8</option>
+  <option value="9">9</option>
+</select>
+<select id="x2y1" class='x2 y1' name="21">
+  <option value="0"></option>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+  <option value="4">4</option>
+  <option value="5">5</option>
+  <option value="6">6</option>
+  <option value="7">7</option>
+  <option value="8">8</option>
+  <option value="9">9</option>
+</select>
+<br />
+<select id="x0y2" class='x0 y2' name="02">
+  <option value="0"></option>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+  <option value="4">4</option>
+  <option value="5">5</option>
+  <option value="6">6</option>
+  <option value="7">7</option>
+  <option value="8">8</option>
+  <option value="9">9</option>
+</select>
+<select id="x1y2" class='x1 y2' name="12">
+  <option value="0"></option>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+  <option value="4">4</option>
+  <option value="5">5</option>
+  <option value="6">6</option>
+  <option value="7">7</option>
+  <option value="8">8</option>
+  <option value="9">9</option>
+</select>
+<select id="x2y2" class='x2 y2' name="22">
+  <option value="0"></option>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+  <option value="4">4</option>
+  <option value="5">5</option>
+  <option value="6">6</option>
+  <option value="7">7</option>
+  <option value="8">8</option>
+  <option value="9">9</option>
+</select>
+<br />
+<input type="button" id="do" value='do'></input>
+</form>
+</body>
+<script>
+const doButton = document.querySelector("#do");
+
+function receiveForm (event) {
+  const spots = [
+    document.querySelector('#x0y0'),
+    document.querySelector('#x1y0'),
+    document.querySelector('#x2y0'),
+    document.querySelector('#x0y1'),
+    document.querySelector('#x1y1'),
+    document.querySelector('#x2y1'),
+    document.querySelector('#x0y2'),
+    document.querySelector('#x1y2'),
+    document.querySelector('#x2y2')
+  ];
+  const spotvals = spots.map(s => Number(s.value));
+
+  const board = new GameState(spotvals);
+  const payout = highestExpectedPayout(board)
+
+  console.log(payout);
+  switch (payout.line) {
+    case GameState.LineNames.V1:
+    spots.forEach(spot => spot.style.backgroundColor = null);
+    [spots[0], spots[3], spots[6]]
+      .forEach(spot => spot.style.backgroundColor = 'lightgreen');
+    break;
+    case GameState.LineNames.V2:
+    spots.forEach(spot => spot.style.backgroundColor = null);
+    [spots[1], spots[4], spots[7]]
+      .forEach(spot => spot.style.backgroundColor = 'lightgreen');
+    break;
+    case GameState.LineNames.V3:
+    spots.forEach(spot => spot.style.backgroundColor = null);
+    [spots[2], spots[5], spots[8]]
+      .forEach(spot => spot.style.backgroundColor = 'lightgreen');
+    break;
+    case GameState.LineNames.H1:
+    spots.forEach(spot => spot.style.backgroundColor = null);
+    [spots[0], spots[1], spots[2]]
+      .forEach(spot => spot.style.backgroundColor = 'lightgreen');
+    break;
+    case GameState.LineNames.H2:
+    spots.forEach(spot => spot.style.backgroundColor = null);
+    [spots[3], spots[4], spots[5]]
+      .forEach(spot => spot.style.backgroundColor = 'lightgreen');
+    break;
+    case GameState.LineNames.H3:
+    spots.forEach(spot => spot.style.backgroundColor = null);
+    [spots[6], spots[7], spots[8]]
+      .forEach(spot => spot.style.backgroundColor = 'lightgreen');
+    break;
+    case GameState.LineNames.D1:
+    spots.forEach(spot => spot.style.backgroundColor = null);
+    [spots[0], spots[4], spots[8]]
+      .forEach(spot => spot.style.backgroundColor = 'lightgreen');
+    break;
+    case GameState.LineNames.D2:
+    spots.forEach(spot => spot.style.backgroundColor = null);
+    [spots[2], spots[4], spots[6]]
+      .forEach(spot => spot.style.backgroundColor = 'lightgreen');
+    break;
+  }
+}
+
+doButton.addEventListener('click', receiveForm);
+</script>
+</html>
