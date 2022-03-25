@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Cactar Tester</title>
+<script src='board.js'></script>
+<style>
+select { margin-right:15px; margin-bottom:15px; }
+</style>
+</head>
+<body>
+<form id='doform'>
+<select id="x0y0" class='x0 y0' name="00"></select>
+<select id="x1y0" class='x1 y0' name="10"></select>
+<select id="x2y0" class='x2 y0' name="20"></select>
+<br />
+<select id="x0y1" class='x0 y1' name="01"></select>
+<select id="x1y1" class='x1 y1' name="11"></select>
+<select id="x2y1" class='x2 y1' name="21"></select>
+<br />
+<select id="x0y2" class='x0 y2' name="02"></select>
+<select id="x1y2" class='x1 y2' name="12"></select>
+<select id="x2y2" class='x2 y2' name="22"></select>
+<br />
+<input type="button" id="do" value='do'></input>
+</form>
+</body>
+<script>
+const doButton = document.querySelector('#do');
+const spots = ['#x0y0', '#x1y0', '#x2y0'
+              ,'#x0y1', '#x1y1', '#x2y1'
+              ,'#x0y2', '#x1y2', '#x2y2'
+  ].map(e => document.querySelector(e));
+
+function addOptions() {
+  const selects = document.getElementsByTagName('select');
+  const length = selects.length;
+
+  for (let i = 0; i < length; i++) for (let j = 0; j <= 9; j++) {
+    const element = document.createElement('option');
+    element.setAttribute('value', j);
+    if (j) element.textContent = j;
+
+    selects[i].appendChild(element);
+  }
+}
+
+setTimeout(addOptions, 0);
+
+const setGreen = (elements) =>
+  elements.forEach(spot => spot.style.backgroundColor = 'lightgreen');
+const stateEffect = {
+  [GameState.LineNames.V1]: () => setGreen([spots[0], spots[3], spots[6]])
+ ,[GameState.LineNames.V2]: () => setGreen([spots[1], spots[4], spots[7]])
+ ,[GameState.LineNames.V3]: () => setGreen([spots[2], spots[5], spots[8]])
+ ,[GameState.LineNames.H1]: () => setGreen([spots[0], spots[1], spots[2]])
+ ,[GameState.LineNames.H2]: () => setGreen([spots[3], spots[4], spots[5]])
+ ,[GameState.LineNames.H3]: () => setGreen([spots[6], spots[7], spots[8]])
+ ,[GameState.LineNames.D1]: () => setGreen([spots[0], spots[4], spots[8]])
+ ,[GameState.LineNames.D2]: () => setGreen([spots[2], spots[4], spots[6]])
+};
+
+function receiveForm () {
+  const game = new GameState(spots.map(s=> Number(s.value)));
+  const payout = highestExpectedPayout(game);
+
+  console.log(payout);
+  spots.forEach(spot => spot.style.backgroundColor = null);
+  stateEffect[payout.line]();
+}
+
+doButton.addEventListener('click', receiveForm);
+</script>
+</html>
